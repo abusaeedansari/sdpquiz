@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive Quiz Portal</title>
+  <link rel="icon" href="quiz.png" type="image/png">
+  
+  <!-- Google Fonts for a playful and readable interface -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Custom Styles -->
+  <style>
+    /* -------------------- Custom CSS -------------------- */
+
+    /* Color Palette */
+    :root {
+      --color-background: #F9F7F7; /* Very Light Gray */
+      --color-secondary: #DBE2EF; /* Light Blue */
+      --color-primary: #3F72AF; /* Medium Blue */
+      --color-dark: #112D4E; /* Dark Blue */
+      --color-white: #FFFFFF; /* White */
+      --color-correct: #28a745; /* Green */
+      --color-incorrect: #dc3545; /* Red */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      background-color: var(--color-primary);
+      padding: 20px 0;
+      text-align: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      color: var(--color-white);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      background-color: var(--color-white);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 700px;
+      text-align: center;
+    }
+
+    /* Instructions */
+    .instructions {
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .instructions h2 {
+      font-size: 1.8em;
+      margin-bottom: 15px;
+      color: var(--color-dark);
+    }
+
+    .instructions p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    /* Grade Selection Buttons */
+    .grade-selection {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .grade-button {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      padding: 15px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      font-weight: 700;
+      width: 200px;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .grade-button:hover {
+      background-color: #2c5aa0;
+      transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      .grade-button {
+        width: 100%;
+      }
+      .instructions h2 {
+        font-size: 1.5em;
+      }
+      .instructions p {
+        font-size: 1em;
+      }
+    }
+
+    /* Animations */
+    .container {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    Interactive Quiz Portal
+  </header>
+
+  <div class="container">
+    <div class="instructions">
+      <h2>Welcome to the Interactive Quiz!</h2>
+      <p>
+        We're excited to have you participate in our interactive quizzes designed to enhance your learning experience. Please follow the instructions below to get started:
+      </p>
+      <ul style="text-align: left; margin: 10px 0; padding-left: 20px; font-size: 1.1em; color: #333;">
+        <li>Select your grade from the options below.</li>
+        <li>Enter your name, division, and roll number.</li>
+        <li>Answer each question by selecting the correct option.</li>
+        <li>You have a total of 10 minutes to complete the quiz.</li>
+        <li>After selecting an answer, click "Check Answer" to see if you're correct.</li>
+        <li>Proceed to the next question by clicking "Next Question".</li>
+        <li>At the end of the quiz, your score and performance feedback will be displayed.</li>
+      </ul>
+      <p>
+        Good luck, and have fun learning!
+      </p>
+    </div>
+
+    <div class="grade-selection">
+      <a href="grade3.html" class="grade-button">Grade 3 Quiz</a>
+      <a href="grade4.html" class="grade-button">Grade 4 Quiz</a>
+    </div>
+  </div>
+</body>
+</html>

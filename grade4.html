@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grade 4 Interactive Quiz</title>
+  <link rel="icon" href="quiz.png" type="image/png">
+  
+  <!-- Google Fonts for a playful and readable interface -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  
+  <!-- Firebase Realtime Database -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  
+  <!-- Custom Styles -->
+  <style>
+    /* -------------------- Custom CSS -------------------- */
+
+    /* Color Palette */
+    :root {
+      --color-background: #F9F7F7; /* Very Light Gray */
+      --color-secondary: #DBE2EF; /* Light Blue */
+      --color-primary: #3F72AF; /* Medium Blue */
+      --color-dark: #112D4E; /* Dark Blue */
+      --color-white: #FFFFFF; /* White */
+      --color-correct: #28a745; /* Green */
+      --color-incorrect: #dc3545; /* Red */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      background-color: var(--color-primary);
+      padding: 20px 0;
+      text-align: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      color: var(--color-white);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      background-color: var(--color-white);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+
+    /* Student Details Form */
+    #student-name{
+        font-size: 1.2em;
+    }
+    #student-details {
+      display: block;
+      margin-top: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid var(--color-secondary);
+      border-radius: 8px;
+      font-size: 1em;
+      background-color: #FDFDFD;
+      color: var(--color-dark);
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--color-primary);
+      outline: none;
+    }
+
+    .button {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      padding: 15px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      font-weight: 700;
+      width: 100%;
+    }
+
+    .button:hover {
+      background-color: #2c5aa0;
+      transform: translateY(-2px);
+    }
+
+    /* Error Message */
+    .error {
+      color: var(--color-incorrect);
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    /* Quiz Area */
+    #quiz-area {
+      display: none;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .timer, .score {
+      font-size: 1.2em;
+      font-weight: 700;
+    }
+
+    .progress-container {
+      width: 100%;
+      background-color: var(--color-secondary);
+      border-radius: 10px;
+      overflow: hidden;
+      height: 20px;
+      margin: 15px 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: var(--color-primary);
+      transition: width 0.5s;
+    }
+
+    .question-number {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .question-text {
+      font-size: 1.6em;
+      margin-bottom: 25px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .options {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+
+    .options li {
+      background-color: var(--color-secondary);
+      color: var(--color-dark);
+      margin-bottom: 12px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .options li:hover {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      transform: translateY(-2px);
+    }
+
+    .options li.selected {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      border: 2px solid var(--color-dark);
+    }
+
+    /* Feedback */
+    .feedback {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      display: none;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .feedback.correct {
+      background-color: #d4edda;
+      color: var(--color-correct);
+      border: 2px solid #c3e6cb;
+    }
+
+    .feedback.incorrect {
+      background-color: #f8d7da;
+      color: var(--color-incorrect);
+      border: 2px solid #f5c6cb;
+    }
+
+    .explanation {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+      background-color: #F9F7F7;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      text-align: left;
+    }
+
+    /* Result Area */
+    #result-area {
+      display: none;
+      text-align: center;
+    }
+
+    #result-area h2 {
+      font-size: 2.2em;
+      color: var(--color-dark);
+      margin-bottom: 20px;
+    }
+
+    #result-area p {
+      font-size: 1.3em;
+      margin: 10px 0;
+    }
+
+    /* Buttons Alignment */
+    .button-group {
+      text-align: center;
+      margin-top: 25px;
+    }
+
+    .button-group .button {
+      width: 45%;
+      margin: 5px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .button-group .button {
+        width: 100%;
+        margin: 10px 0 0 0;
+      }
+      .question-text {
+        font-size: 1.4em;
+      }
+      .options li {
+        font-size: 1em;
+        padding: 12px 15px;
+      }
+    }
+
+    /* Animations */
+    .options li {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    Grade 4 Interactive Quiz
+  </header>
+
+  <div class="container">
+    <!-- Student Details Page -->
+    <div id="student-details">
+      <h2 class="center-align">Enter Your Details</h2>
+      <div class="form-group">
+        <label for="student-name">Name:</label>
+        <input type="text" id="student-name" placeholder="Your Name" />
+        <div id="name-error" class="error"></div>
+      </div>
+      <div class="form-group">
+        <label for="student-division">Division:</label>
+        <select id="student-division">
+          <option value="" disabled selected>Choose your division</option>
+          <option value="A">A</option>
+        </select>
+        <div id="division-error" class="error"></div>
+      </div>
+      <div class="form-group">
+        <label for="student-roll">Roll Number:</label>
+        <input type="text" id="student-roll" placeholder="Roll Number" />
+        <div id="roll-error" class="error"></div>
+      </div>
+      <div class="button-group">
+        <button class="button" onclick="startQuiz()">Start Quiz</button>
+      </div>
+    </div>
+
+    <!-- Quiz Page -->
+    <div id="quiz-area">
+      <div class="top-bar">
+        <div class="timer" id="timer">Time Left: 10:00</div>
+        <div class="score">Score: 0</div>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question-number" id="question-number">Question 1 of 30</div>
+      <div class="question-text" id="question-text">Sample Question?</div>
+      <ul class="options" id="options-list">
+        <!-- Options will be dynamically generated here -->
+      </ul>
+      <div class="feedback" id="feedback"></div>
+      <div class="explanation" id="explanation"></div>
+      <div class="button-group">
+        <button class="button" id="check-button" onclick="checkAnswer()" disabled>Check Answer</button>
+        <button class="button" id="next-button" onclick="nextQuestion()" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <!-- Result Page -->
+    <div id="result-area">
+      <h2>Quiz Completed!</h2>
+      <p id="result-message">Your Score: 0/30</p>
+      <p id="performance-feedback">Great job!</p>
+      <div class="button-group">
+        <button class="button" onclick="retakeQuiz()">Retake Quiz</button>
+        <button class="button" onclick="goHome()">Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Configuration -->
+  <script>
+    // Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-RDLOoTlaio0VgtFh7eencMr9ekdFEEk",
+      authDomain: "test-app-1-6ade5.firebaseapp.com",
+      databaseURL: "https://test-app-1-6ade5-default-rtdb.firebaseio.com",
+      projectId: "test-app-1-6ade5",
+      storageBucket: "test-app-1-6ade5.firebasestorage.app",
+      messagingSenderId: "938447574937",
+      appId: "1:938447574937:web:65c1c53a12c665988b2508",
+      measurementId: "G-FKNLFZH4G9"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+  </script>
+
+  <script>
+    // JavaScript Code for Quiz Functionality
+
+    // Define the current grade
+    const GRADE = 'grade4'; // Set to 'grade4' for Grade 4 quizzes
+
+    // Questions Array (30 Grade 4 questions with explanations)
+    const questions = [
+      {
+        "question": "What is the primary purpose of a bookmark in a browser?",
+        "options": [
+          "A) To save your favorite websites for quick access",
+          "B) To speed up the browser",
+          "C) To delete files",
+          "D) To play online games"
+        ],
+        "correctAnswer": "A) To save your favorite websites for quick access",
+        "explanation": "Bookmarks allow users to save and quickly access their favorite websites without having to search for them each time."
+      },
+      {
+        "question": "Which of these is an example of a search engine?",
+        "options": [
+          "A) Google",
+          "B) Microsoft Word",
+          "C) OpenOffice Writer",
+          "D) Adobe Reader"
+        ],
+        "correctAnswer": "A) Google",
+        "explanation": "Google is a widely used search engine that helps users find information on the internet."
+      },
+      {
+        "question": "What tool would you use to make text appear slanted?",
+        "options": [
+          "A) Bold",
+          "B) Italic",
+          "C) Underline",
+          "D) Font Size"
+        ],
+        "correctAnswer": "B) Italic",
+        "explanation": "The Italic tool slants the text to the right, often used for emphasis."
+      },
+      {
+        "question": "What does Ctrl + Z do in a document?",
+        "options": [
+          "A) Undoes the last action",
+          "B) Saves the document",
+          "C) Deletes the document",
+          "D) Copies text"
+        ],
+        "correctAnswer": "A) Undoes the last action",
+        "explanation": "Ctrl + Z is a shortcut that reverses the most recent action performed in the document."
+      },
+      {
+        "question": "What happens if you delete a file and then empty the Recycle Bin?",
+        "options": [
+          "A) The file is permanently deleted",
+          "B) The file moves back to the desktop",
+          "C) The file is saved automatically",
+          "D) The file becomes hidden but not deleted"
+        ],
+        "correctAnswer": "A) The file is permanently deleted",
+        "explanation": "Emptying the Recycle Bin removes all files it contains, making them unrecoverable through normal means."
+      },
+      {
+        "question": "What is the purpose of rearranging icons on the desktop?",
+        "options": [
+          "A) To delete unnecessary files",
+          "B) To organize files and programs for quick access",
+          "C) To change the color of the desktop background",
+          "D) To make the computer faster"
+        ],
+        "correctAnswer": "B) To organize files and programs for quick access",
+        "explanation": "Organizing desktop icons helps users find and access their files and applications more efficiently."
+      },
+      {
+        "question": "If a computer is slow even after restarting, which part might need an upgrade?",
+        "options": [
+          "A) Monitor",
+          "B) RAM",
+          "C) Speakers",
+          "D) Keyboard"
+        ],
+        "correctAnswer": "B) RAM",
+        "explanation": "RAM (Random Access Memory) affects a computer's ability to handle multiple tasks smoothly. Upgrading RAM can improve performance."
+      },
+      {
+        "question": "What happens to the data stored in the hard drive when you shut down the computer?",
+        "options": [
+          "A) It gets deleted automatically",
+          "B) It remains saved until you delete it manually",
+          "C) It is moved to the RAM",
+          "D) It is compressed into smaller files"
+        ],
+        "correctAnswer": "B) It remains saved until you delete it manually",
+        "explanation": "Data on the hard drive is stored permanently and remains intact even when the computer is turned off."
+      },
+      {
+        "question": "How does the computer use input and output devices?",
+        "options": [
+          "A) Input devices give commands; output devices show results",
+          "B) Output devices store files; input devices display data",
+          "C) Input devices connect to the internet; output devices save passwords",
+          "D) Input devices turn on the computer; output devices restart it"
+        ],
+        "correctAnswer": "A) Input devices give commands; output devices show results",
+        "explanation": "Input devices like keyboards and mice send data to the computer, while output devices like monitors and printers display the results."
+      },
+      {
+        "question": "Which of these parts is used for temporary storage in a computer?",
+        "options": [
+          "A) CPU",
+          "B) RAM",
+          "C) Hard Drive",
+          "D) Monitor"
+        ],
+        "correctAnswer": "B) RAM",
+        "explanation": "RAM (Random Access Memory) provides temporary storage that the CPU uses to process data quickly."
+      },
+      {
+        "question": "What does the Recycle Bin do?",
+        "options": [
+          "A) Permanently deletes files",
+          "B) Stores deleted files temporarily",
+          "C) Organizes documents",
+          "D) Changes desktop settings"
+        ],
+        "correctAnswer": "B) Stores deleted files temporarily",
+        "explanation": "The Recycle Bin holds deleted files until you choose to permanently remove them or restore them."
+      },
+      {
+        "question": "Where is the Start button usually found?",
+        "options": [
+          "A) Top-right corner",
+          "B) Bottom-left corner",
+          "C) Middle of the screen",
+          "D) Bottom-right corner"
+        ],
+        "correctAnswer": "B) Bottom-left corner",
+        "explanation": "In most Windows operating systems, the Start button is located at the bottom-left corner of the screen."
+      },
+      {
+        "question": "What does the ‘Auto-hide taskbar’ setting do?",
+        "options": [
+          "A) Locks the taskbar in place",
+          "B) Makes the taskbar disappear until you move the mouse near it",
+          "C) Hides the taskbar",
+          "D) Deletes the taskbar icons"
+        ],
+        "correctAnswer": "B) Makes the taskbar disappear until you move the mouse near it",
+        "explanation": "Auto-hide taskbar saves screen space by hiding the taskbar when not in use and revealing it when the cursor approaches."
+      },
+      {
+        "question": "Which of these is NOT an input device?",
+        "options": [
+          "A) Mouse",
+          "B) Keyboard",
+          "C) Monitor",
+          "D) Microphone"
+        ],
+        "correctAnswer": "C) Monitor",
+        "explanation": "A monitor is an output device that displays information from the computer."
+      },
+      {
+        "question": "Why is a hard drive important?",
+        "options": [
+          "A) It processes instructions",
+          "B) It stores data for future use",
+          "C) It connects to the internet",
+          "D) It powers the computer"
+        ],
+        "correctAnswer": "B) It stores data for future use",
+        "explanation": "The hard drive is responsible for storing all digital data, including the operating system, applications, and personal files."
+      },
+      {
+        "question": "What happens to the data in the RAM when the computer is turned off?",
+        "options": [
+          "A) It is saved permanently",
+          "B) It is lost",
+          "C) It is stored in the hard drive",
+          "D) It is transferred to the CPU"
+        ],
+        "correctAnswer": "B) It is lost",
+        "explanation": "RAM is volatile memory, meaning all data stored in it is erased when the computer is turned off."
+      },
+      {
+        "question": "Which device helps you move items on the screen?",
+        "options": [
+          "A) Monitor",
+          "B) Mouse",
+          "C) CPU",
+          "D) Keyboard"
+        ],
+        "correctAnswer": "B) Mouse",
+        "explanation": "A mouse is an input device that allows users to interact with the computer by moving a cursor on the screen."
+      },
+      {
+        "question": "What is the main job of the CPU in a computer?",
+        "options": [
+          "A) Display pictures",
+          "B) Store files",
+          "C) Process instructions",
+          "D) Connect to the internet"
+        ],
+        "correctAnswer": "C) Process instructions",
+        "explanation": "The CPU (Central Processing Unit) executes instructions from programs, effectively acting as the brain of the computer."
+      },
+      {
+        "question": "Which file format is most commonly used to save images from the internet?",
+        "options": [
+          "A) .txt",
+          "B) .jpg",
+          "C) .docx",
+          "D) .exe"
+        ],
+        "correctAnswer": "B) .jpg",
+        "explanation": ".jpg is a widely used format for saving and sharing images on the internet due to its efficient compression."
+      },
+      {
+        "question": "Which of these statements about bookmarks is true?",
+        "options": [
+          "A) Bookmarks save your browsing history",
+          "B) Bookmarks help you quickly access favorite websites",
+          "C) Bookmarks delete unwanted files",
+          "D) Bookmarks close open tabs"
+        ],
+        "correctAnswer": "B) Bookmarks help you quickly access favorite websites",
+        "explanation": "Bookmarks allow users to save and easily return to their preferred websites without searching for them each time."
+      },
+      {
+        "question": "What happens if you use the ‘Justify’ alignment option?",
+        "options": [
+          "A) Text is aligned to the left",
+          "B) Text is aligned to the center",
+          "C) Text is evenly spaced across the page",
+          "D) Text is aligned to the right"
+        ],
+        "correctAnswer": "C) Text is evenly spaced across the page",
+        "explanation": "The 'Justify' option aligns text to both the left and right margins, creating a clean and uniform appearance."
+      },
+      {
+        "question": "Which of these devices helps you record sound into the computer?",
+        "options": [
+          "A) Speaker",
+          "B) Microphone",
+          "C) Webcam",
+          "D) Mouse"
+        ],
+        "correctAnswer": "B) Microphone",
+        "explanation": "A microphone is an input device that captures audio and sends it to the computer for processing or recording."
+      },
+      {
+        "question": "Imagine you’re building a new computer. Which part would you focus on to make it run faster?",
+        "options": [
+          "A) RAM and CPU",
+          "B) Monitor and Mouse",
+          "C) Hard Drive and Keyboard",
+          "D) Speakers and Printer"
+        ],
+        "correctAnswer": "A) RAM and CPU",
+        "explanation": "Upgrading the RAM and CPU can significantly enhance a computer's processing speed and ability to handle multiple tasks."
+      },
+      {
+        "question": "Why do laptops have smaller internal components compared to desktops?",
+        "options": [
+          "A) To reduce electricity use",
+          "B) To make them portable and lightweight",
+          "C) To store fewer files",
+          "D) To improve their speed"
+        ],
+        "correctAnswer": "B) To make them portable and lightweight",
+        "explanation": "Smaller components allow laptops to be compact and easy to carry, enhancing their portability."
+      },
+      {
+        "question": "What does the \"Personalize\" option on the desktop allow you to do?",
+        "options": [
+          "A) Change the computer's speed",
+          "B) Adjust the desktop’s appearance, like wallpaper and themes",
+          "C) Add more memory to the computer",
+          "D) Install new programs"
+        ],
+        "correctAnswer": "B) Adjust the desktop’s appearance, like wallpaper and themes",
+        "explanation": "The 'Personalize' option lets users customize their desktop background, color schemes, and themes to their preference."
+      },
+      {
+        "question": "What does locking the taskbar prevent?",
+        "options": [
+          "A) Closing open programs",
+          "B) Changing the taskbar position accidentally",
+          "C) Opening the Start menu",
+          "D) Changing desktop shortcuts"
+        ],
+        "correctAnswer": "B) Changing the taskbar position accidentally",
+        "explanation": "Locking the taskbar ensures it stays in place, preventing accidental movement or resizing."
+      },
+      {
+        "question": "Why might someone use the \"Find and Replace\" tool?",
+        "options": [
+          "A) To quickly locate and change specific words or phrases",
+          "B) To align text to the center",
+          "C) To save the document",
+          "D) To remove formatting from the text"
+        ],
+        "correctAnswer": "A) To quickly locate and change specific words or phrases",
+        "explanation": "The 'Find and Replace' tool streamlines the process of editing documents by allowing users to search for specific text and replace it as needed."
+      },
+      {
+        "question": "Which tab in a browser lets you see the list of websites you recently visited?",
+        "options": [
+          "A) History",
+          "B) Bookmarks",
+          "C) Refresh",
+          "D) Settings"
+        ],
+        "correctAnswer": "A) History",
+        "explanation": "The 'History' tab records and displays the websites a user has visited, allowing easy navigation back to them."
+      },
+      {
+        "question": "Why is it important to update your web browser regularly?",
+        "options": [
+          "A) To improve security and add new features",
+          "B) To delete old bookmarks",
+          "C) To make the internet faster",
+          "D) To automatically log into websites"
+        ],
+        "correctAnswer": "A) To improve security and add new features",
+        "explanation": "Regular updates enhance browser security, fix bugs, and introduce new functionalities for a better user experience."
+      },
+      {
+        "question": "Which of these is a good online practice?",
+        "options": [
+          "A) Using the same password for all accounts",
+          "B) Avoiding suspicious links and pop-ups",
+          "C) Sharing your password with a friend",
+          "D) Entering personal details on all websites"
+        ],
+        "correctAnswer": "B) Avoiding suspicious links and pop-ups",
+        "explanation": "Being cautious of suspicious links and pop-ups helps protect against malware, phishing, and other online threats."
+      }
+    ];
+
+    // Shuffle questions to randomize their order
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    shuffleArray(questions);
+
+    // Variables to track quiz state
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 600; // 10 minutes in seconds
+    let studentInfo = {};
+    let responses = []; // Array to store individual responses
+
+    // Initialize Quiz
+    function startQuiz() {
+      // Validate student details
+      const name = document.getElementById('student-name').value.trim();
+      const division = document.getElementById('student-division').value;
+      const roll = document.getElementById('student-roll').value.trim();
+
+      let valid = true;
+
+      if (name === "") {
+        document.getElementById('name-error').textContent = "Please enter your name.";
+        valid = false;
+      } else {
+        document.getElementById('name-error').textContent = "";
+      }
+
+      if (division === "") {
+        document.getElementById('division-error').textContent = "Please select your division.";
+        valid = false;
+      } else {
+        document.getElementById('division-error').textContent = "";
+      }
+
+      if (roll === "" || isNaN(roll)) {
+        document.getElementById('roll-error').textContent = "Please enter a valid roll number.";
+        valid = false;
+      } else {
+        document.getElementById('roll-error').textContent = "";
+      }
+
+      if (!valid) return;
+
+      // Store student info
+      studentInfo = {
+        name: name,
+        division: division,
+        roll: roll
+      };
+      localStorage.setItem('studentInfo', JSON.stringify(studentInfo));
+
+      // Hide student details and show quiz
+      document.getElementById('student-details').style.display = 'none';
+      document.getElementById('quiz-area').style.display = 'block';
+
+      // Start timer
+      startTimer();
+
+      // Display first question
+      displayQuestion();
+    }
+
+    // Start the countdown timer
+    function startTimer() {
+      updateTimerDisplay();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          endQuiz();
+        }
+      }, 1000);
+    }
+
+    // Update timer display
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById('timer').textContent = `Time Left: ${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    // Pad single digits with a leading zero
+    function pad(num) {
+      return num < 10 ? '0' + num : num;
+    }
+
+    // Display the current question
+    function displayQuestion() {
+      if (questions.length === 0) {
+        alert("No questions available for this quiz. Please contact the administrator.");
+        goHome();
+        return;
+      }
+
+      const questionObj = questions[currentQuestionIndex];
+      document.getElementById('question-number').textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+      document.getElementById('question-text').textContent = questionObj.question;
+
+      // Clear previous options
+      const optionsList = document.getElementById('options-list');
+      optionsList.innerHTML = '';
+
+      // Display options
+      questionObj.options.forEach(option => {
+        const li = document.createElement('li');
+        li.textContent = option;
+        li.onclick = () => selectOption(li);
+        optionsList.appendChild(li);
+      });
+
+      // Update progress bar
+      const progress = ((currentQuestionIndex) / questions.length) * 100;
+      document.getElementById('progress-bar').style.width = `${progress}%`;
+
+      // Disable Check and Next buttons until an option is selected
+      document.getElementById('check-button').disabled = true;
+      document.getElementById('next-button').disabled = true;
+
+      // Hide feedback and explanation
+      document.getElementById('feedback').style.display = 'none';
+      document.getElementById('explanation').style.display = 'none';
+
+      // Reset pointer events for options
+      const options = document.querySelectorAll('#options-list li');
+      options.forEach(option => option.style.pointerEvents = 'auto');
+    }
+
+    // Handle option selection
+    function selectOption(selectedLi) {
+      const options = document.querySelectorAll('#options-list li');
+      options.forEach(option => option.classList.remove('selected'));
+      selectedLi.classList.add('selected');
+      document.getElementById('check-button').disabled = false;
+    }
+
+    // Check the selected answer
+    function checkAnswer() {
+      const selectedOption = document.querySelector('#options-list li.selected');
+      if (!selectedOption) {
+        alert("Please select an answer before checking.");
+        return;
+      }
+
+      const answer = selectedOption.textContent;
+      const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+
+      // Check if the answer is correct
+      let isCorrect = false;
+      if (answer === correctAnswer) {
+        score++;
+        isCorrect = true;
+      }
+
+      // Update score display
+      document.querySelector('.score').textContent = `Score: ${score}`;
+
+      // Show feedback
+      const feedbackDiv = document.getElementById('feedback');
+      feedbackDiv.style.display = 'block';
+      feedbackDiv.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      feedbackDiv.textContent = isCorrect ? 'Correct!' : 'Incorrect!';
+
+      // Show explanation
+      const explanationDiv = document.getElementById('explanation');
+      explanationDiv.style.display = 'block';
+      if (isCorrect) {
+        explanationDiv.textContent = questions[currentQuestionIndex].explanation;
+      } else {
+        explanationDiv.textContent = `Correct Answer: ${correctAnswer}. ${questions[currentQuestionIndex].explanation}`;
+      }
+
+      // Store response
+      const response = {
+        question: questions[currentQuestionIndex].question,
+        selectedAnswer: answer,
+        correctAnswer: correctAnswer,
+        isCorrect: isCorrect
+      };
+      responses.push(response);
+
+      // Disable Check button and enable Next button
+      document.getElementById('check-button').disabled = true;
+      document.getElementById('next-button').disabled = false;
+
+      // Prevent further selection
+      const options = document.querySelectorAll('#options-list li');
+      options.forEach(option => option.style.pointerEvents = 'none');
+    }
+
+    // Proceed to next question
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        displayQuestion();
+      } else {
+        endQuiz();
+      }
+    }
+
+    // End the quiz
+    function endQuiz() {
+      clearInterval(timer);
+      document.getElementById('quiz-area').style.display = 'none';
+      document.getElementById('result-area').style.display = 'block';
+      document.getElementById('result-message').textContent = `Your Score: ${score} / ${questions.length}`;
+      document.getElementById('performance-feedback').textContent = getPerformanceFeedback(score, questions.length);
+
+      // Store results in Firebase
+      storeResults();
+    }
+
+    // Provide feedback based on performance
+    function getPerformanceFeedback(score, total) {
+      const percentage = (score / total) * 100;
+      if (percentage === 100) return "🌟 Excellent work!";
+      if (percentage >= 80) return "👍 Great job!";
+      if (percentage >= 50) return "😊 Good effort!";
+      return "🔍 Keep practicing!";
+    }
+
+    // Retake the quiz
+    function retakeQuiz() {
+      // Reset variables
+      currentQuestionIndex = 0;
+      score = 0;
+      timeLeft = 600; // Reset to 10 minutes
+      responses = []; // Clear previous responses
+
+      // Hide result and show quiz
+      document.getElementById('result-area').style.display = 'none';
+      document.getElementById('quiz-area').style.display = 'block';
+
+      // Restart timer and display first question
+      startTimer();
+      displayQuestion();
+    }
+
+    // Go back to home (student details)
+    function goHome() {
+      // Reset variables
+      currentQuestionIndex = 0;
+      score = 0;
+      timeLeft = 600; // Reset to 10 minutes
+      responses = []; // Clear previous responses
+
+      // Hide result and quiz, show student details
+      document.getElementById('result-area').style.display = 'none';
+      document.getElementById('quiz-area').style.display = 'none';
+      document.getElementById('student-details').style.display = 'block';
+
+      // Clear stored student info
+      localStorage.removeItem('studentInfo');
+
+      // Clear any feedback or explanations
+      document.getElementById('feedback').style.display = 'none';
+      document.getElementById('explanation').style.display = 'none';
+    }
+
+    // Store quiz results in Firebase
+    function storeResults() {
+      const student = studentInfo;
+      const totalScore = score;
+      const totalQuestions = questions.length;
+
+      // Reference to the database with grade-specific paths
+      const dbRef = database.ref(`quiz-results/${GRADE}`);
+
+      // Individual Results
+      const individualRef = dbRef.child('individual-results').push();
+      individualRef.set({
+        name: student.name,
+        division: student.division,
+        rollNumber: student.roll,
+        score: totalScore,
+        total: totalQuestions,
+        timestamp: Date.now(),
+        responses: responses // Store individual responses
+      });
+
+      // Division Results
+      const divisionRef = dbRef.child('division-results').child(student.division);
+      divisionRef.once('value', snapshot => {
+        let divisionData = snapshot.val() || { totalScore: 0, totalParticipants: 0 };
+        divisionData.totalScore += totalScore;
+        divisionData.totalParticipants += 1;
+        divisionRef.set(divisionData);
+      });
+
+      // Overall Results
+      const overallRef = dbRef.child('overall-results');
+      overallRef.once('value', snapshot => {
+        let overallData = snapshot.val() || { totalScore: 0, totalParticipants: 0 };
+        overallData.totalScore += totalScore;
+        overallData.totalParticipants += 1;
+        overallRef.set(overallData);
+      });
+    }
+
+    // Load Student Details from localStorage if available
+    window.onload = () => {
+      const storedDetails = localStorage.getItem('studentInfo');
+      if (storedDetails) {
+        const details = JSON.parse(storedDetails);
+        document.getElementById('student-name').value = details.name || "";
+        document.getElementById('student-division').value = details.division || "";
+        document.getElementById('student-roll').value = details.roll || "";
+      }
+    };
+  </script>
+</body>
+</html>
